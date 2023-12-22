@@ -27,22 +27,52 @@
 
     function renderIframe() {
         const iframeUrl = getQueryParam('iframeUrl');
-        const showDuration = parseInt(getQueryParam('showDuration'), 10) || 60000;
         if (iframeUrl) {
             const iframe = document.createElement('iframe');
             iframe.src = iframeUrl;
             iframe.style.width = '100%';
             iframe.style.height = '100vh';
             document.body.appendChild(iframe);
-            if (showDuration > 0) {
-                setTimeout(() => {
-                    window.history.back();
-                }, showDuration);
-            }
-        } 
+        }
     }
-    window.onload = function() {
+
+    function setupInactivityCallback(callback) {
+        let timeoutId;
+        function resetTimer() {
+            clearTimeout(timeoutId);
+            // Set up the timer to trigger the callback after 60 seconds
+            timeoutId = setTimeout(() => {
+                callback();
+                resetTimer(); // Reinitialize the timer after the callback
+            }, 60000); // 60 seconds
+        }
+
+        // List of events that indicate user activity
+        const events = [
+            "mousemove",
+            "keypress",
+            "scroll",
+            "click",
+            "touchstart",
+            "touchmove",
+            "mousedown",
+            "mouseup",
+            "wheel",
+            "resize",
+            "input",
+            "change",
+        ];
+        // Add event listeners for each event type
+        events.forEach((event) => document.addEventListener(event, resetTimer));
+        resetTimer();
+    }
+
+    window.onload = function () {
         renderIframe();
+        setupInactivityCallback(() => {
+            //The page has been inactive for 60 seconds."
+            window.history.back();
+        });
     };
 </script>
 
